@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <title>Product</title>
+  <link id="re-font-link" rel="stylesheet" href="">
+  <link rel="stylesheet" href="rebel-base.css">
+  <link id="re-favicon" rel="icon" href="">
+  <style>
+    .product-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: start;
+    }
+    /* Gallery */
+    .product-gallery__main {
+      position: relative;
+      aspect-ratio: 1/1;
+      border-radius: var(--re-radius-lg);
+      overflow: hidden;
+      background: var(--re-bg-alt);
+      border: 1px solid var(--re-border);
+    }
+    .product-gallery__main img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      transition: opacity 0.25s ease;
+    }
+    .product-gallery__thumbs {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+    .product-gallery__thumb {
+      width: 72px; height: 72px;
+      border-radius: var(--re-radius);
+      overflow: hidden;
+      border: 2px solid var(--re-border);
+      cursor: pointer;
+      transition: border-color var(--re-transition);
+      flex-shrink: 0;
+      background: var(--re-bg-alt);
+    }
+    .product-gallery__thumb.active { border-color: var(--re-accent); }
+    .product-gallery__thumb img { width: 100%; height: 100%; object-fit: cover; }
+    /* Product info */
+    .product-info { position: sticky; top: calc(var(--re-nav-height) + 24px); }
+    .product-category {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--re-accent);
+      margin-bottom: 8px;
+    }
+    .product-name {
+      font-family: var(--re-font-display);
+      font-size: clamp(1.6rem, 3vw, 2.4rem);
+      font-weight: 900;
+      line-height: 1.1;
+      margin-bottom: 16px;
+    }
+    .product-rating {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .product-stars { color: #f59e0b; font-size: 1rem; }
+    .product-rating-count { font-size: 0.82rem; color: var(--re-text-muted); }
+    .product-pricing {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .product-price {
+      font-family: var(--re-font-display);
+      font-size: 2rem;
+      font-weight: 900;
+      color: var(--re-text);
+    }
+    .product-old-price {
+      font-size: 1.1rem;
+      color: var(--re-text-muted);
+      text-decoration: line-through;
+    }
+    .product-save {
+      font-size: 0.78rem;
+      font-weight: 800;
+      background: #22c55e;
+      color: #fff;
+      padding: 3px 8px;
+      border-radius: var(--re-radius-sm, 4px);
+    }
+    .product-stock {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      margin-bottom: 24px;
+    }
+    .product-stock--in  { color: #22c55e; }
+    .product-stock--low { color: #f59e0b; }
+    .product-stock--out { color: #e63946; }
+    .product-stock::before {
+      content: '';
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      flex-shrink: 0;
+    }
+    .product-short-desc {
+      font-size: 0.95rem;
+      line-height: 1.8;
+      color: var(--re-text-muted);
+      margin-bottom: 28px;
+    }
+    /* Quantity selector */
+    .product-qty {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      border: 2px solid var(--re-border);
+      border-radius: var(--re-radius);
+      overflow: hidden;
+      width: fit-content;
+      margin-bottom: 20px;
+    }
+    .product-qty__btn {
+      width: 44px; height: 48px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--re-text);
+      background: var(--re-bg-alt);
+      transition: background var(--re-transition);
+      border: none;
+    }
+    .product-qty__btn:hover { background: var(--re-border); }
+    .product-qty__btn:disabled { opacity: 0.35; }
+    .product-qty__num {
+      width: 56px;
+      height: 48px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 1rem;
+      border: none;
+      border-left: 2px solid var(--re-border);
+      border-right: 2px solid var(--re-border);
+      color: var(--re-text);
+      background: var(--re-surface);
+      -moz-appearance: textfield;
+    }
+    .product-qty__num::-webkit-outer-spin-button,
+    .product-qty__num::-webkit-inner-spin-button { -webkit-appearance: none; }
+    /* Action buttons */
+    .product-actions {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .product-wishlist-btn {
+      width: 52px; height: 52px;
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      border: 2px solid var(--re-border);
+      border-radius: var(--re-radius);
+      font-size: 1.3rem;
+      color: var(--re-text-muted);
+      background: var(--re-surface);
+      transition: all var(--re-transition);
+    }
+    .product-wishlist-btn:hover,
+    .product-wishlist-btn.active { border-color: #e63946; color: #e63946; }
+    /* Meta */
+    .product-meta {
+      border-top: 1px solid var(--re-border);
+      padding-top: 20px;
+      margin-top: 8px;
+      font-size: 0.82rem;
+      color: var(--re-text-muted);
+      line-height: 2;
+    }
+    .product-meta strong { color: var(--re-text); }
+    /* Tabs */
+    .product-tabs { margin-top: 64px; }
+    .product-tab-nav {
+      display: flex;
+      gap: 0;
+      border-bottom: 2px solid var(--re-border);
+      margin-bottom: 32px;
+    }
+    .product-tab-btn {
+      padding: 12px 24px;
+      font-weight: 700;
+      font-size: 0.88rem;
+      color: var(--re-text-muted);
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: all var(--re-transition);
+      background: none;
+      border-top: none;
+      border-left: none;
+      border-right: none;
+    }
+    .product-tab-btn.active { color: var(--re-accent); border-bottom-color: var(--re-accent); }
+    .product-tab-content { display: none; }
+    .product-tab-content.active { display: block; }
+    .product-description { font-size: 0.95rem; line-height: 1.9; color: var(--re-text-muted); }
+    .product-description p { margin-bottom: 16px; }
+    /* Related products */
+    .related-section { margin-top: 80px; }
+    @media (max-width: 900px) {
+      .product-layout { grid-template-columns: 1fr; gap: 32px; }
+      .product-info { position: static; }
+    }
+    @media (max-width: 480px) {
+      .product-actions { flex-direction: column; }
+      .product-wishlist-btn { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ANNOUNCEMENT -->
+<div data-section="announcement" style="display:none">
+  <span data-announcement-text></span>
+  <button class="re-announcement__close" onclick="this.parentElement.style.display='none'">✕</button>
+</div>
+
+<!-- NAV -->
+<nav data-nav>
+  <div class="re-container">
+    <div class="re-nav__inner">
+      <a href="index.html" class="re-nav__logo">
+        <img data-store-logo style="display:none" alt="">
+        <span data-store-logo-text></span>
+      </a>
+      <ul class="re-nav__links" data-nav-links></ul>
+      <div class="re-nav__actions">
+        <div class="re-search-wrapper">
+          <span class="re-search__icon">🔍</span>
+          <input class="re-nav__search" data-search-input type="search"
+            placeholder="Search products..." autocomplete="off">
+          <div class="re-search__results" data-search-results></div>
+        </div>
+        <div class="re-nav__icon" data-wishlist-icon title="Wishlist">
+          ♡<span data-wishlist-count style="display:none">0</span>
+        </div>
+        <div class="re-nav__icon" data-cart-icon title="Cart">
+          🛒<span data-cart-count style="display:none">0</span>
+        </div>
+        <div data-hamburger><span></span><span></span><span></span></div>
+      </div>
+    </div>
+  </div>
+</nav>
+<div data-mobile-nav aria-hidden="true"><nav data-mobile-nav-links></nav></div>
+<div class="re-nav-spacer"></div>
+
+<!-- CART DRAWER -->
+<div class="re-cart-overlay" id="cartOverlay"></div>
+<div class="re-cart-drawer" id="cartDrawer">
+  <div class="re-cart-drawer__header">
+    <span class="re-cart-drawer__title">Your Cart (<span data-cart-count>0</span>)</span>
+    <button class="re-cart-drawer__close" onclick="CartDrawer.close()">✕</button>
+  </div>
+  <div class="re-cart-drawer__items" id="cartItems"></div>
+  <div class="re-cart-drawer__footer">
+    <div class="re-cart-drawer__subtotal">
+      <span>Subtotal</span><span id="cartSubtotal">R 0.00</span>
+    </div>
+    <a href="checkout.html" class="re-btn re-btn--primary re-btn--full re-btn--lg">Checkout</a>
+  </div>
+</div>
+
+<!-- BREADCRUMB -->
+<div class="re-section--sm re-section--alt" style="padding:16px 0">
+  <div class="re-container">
+    <nav style="font-size:.82rem;color:var(--re-text-muted);display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+      <a href="index.html" style="color:var(--re-text-muted)">Home</a>
+      <span>›</span>
+      <a href="shop.html" style="color:var(--re-text-muted)">Shop</a>
+      <span>›</span>
+      <span id="breadcrumbCat" style="display:none"></span>
+      <span id="breadcrumbName" style="color:var(--re-text);font-weight:600"></span>
+    </nav>
+  </div>
+</div>
+
+<!-- PRODUCT -->
+<section class="re-section">
+  <div class="re-container">
+    <div id="productContent">
+      <!-- Loading state -->
+      <div class="product-layout">
+        <div class="re-skeleton" style="aspect-ratio:1/1;border-radius:16px"></div>
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div class="re-skeleton" style="height:24px;width:60%;border-radius:8px"></div>
+          <div class="re-skeleton" style="height:48px;border-radius:8px"></div>
+          <div class="re-skeleton" style="height:20px;width:40%;border-radius:8px"></div>
+          <div class="re-skeleton" style="height:100px;border-radius:8px"></div>
+          <div class="re-skeleton" style="height:52px;border-radius:8px"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer data-footer>
+  <div class="re-container">
+    <div class="re-footer__grid">
+      <div>
+        <a href="index.html" class="re-footer__logo">
+          <img data-store-logo style="display:none" alt="">
+          <span data-store-logo-text></span>
+        </a>
+        <p class="re-footer__tagline" data-store-tagline></p>
+        <div class="re-footer__social" id="footerSocial"></div>
+      </div>
+      <div>
+        <p class="re-footer__heading" data-footer-col1-heading></p>
+        <ul class="re-footer__links" data-footer-col1-links></ul>
+      </div>
+      <div>
+        <p class="re-footer__heading" data-footer-col2-heading></p>
+        <ul class="re-footer__links" data-footer-col2-links></ul>
+      </div>
+      <div>
+        <p class="re-footer__heading">Contact</p>
+        <ul class="re-footer__links">
+          <li data-store-address style="color:rgba(255,255,255,.6);font-size:.88rem;line-height:1.8"></li>
+          <li><a data-store-phone style="color:rgba(255,255,255,.6)"></a></li>
+          <li><a data-store-email style="color:rgba(255,255,255,.6)"></a></li>
+          <li id="footerHours" style="margin-top:10px;font-size:.82rem;color:rgba(255,255,255,.4);line-height:1.9"></li>
+        </ul>
+      </div>
+    </div>
+    <div class="re-footer__bottom">
+      <p>© <span id="footerYear"></span> <span data-store-name></span>. All rights reserved.</p>
+      <p>Powered by <strong style="color:var(--re-accent)">Rebel Engine</strong> 🇿🇦</p>
+    </div>
+  </div>
+</footer>
+
+<a data-whatsapp-float href="#" target="_blank" rel="noopener" aria-label="WhatsApp" style="display:none">💬</a>
+
+<script src="rebel-engine.js"></script>
+<script src="STORE_CONFIG.js"></script>
+<script>
+let _product = null;
+let _qty     = 1;
+
+function setQty(val) {
+  if (!_product) return;
+  const max = _product.stockQuantity || 99;
+  _qty = Math.max(1, Math.min(val, max));
+  document.getElementById('qtyInput').value = _qty;
+  document.getElementById('qtyDec').disabled = _qty <= 1;
+  document.getElementById('qtyInc').disabled = _qty >= max;
+}
+
+function switchThumb(url, idx) {
+  document.getElementById('mainImage').src = url;
+  document.querySelectorAll('.product-gallery__thumb').forEach((t, i) => {
+    t.classList.toggle('active', i === idx);
+  });
+}
+
+function switchTab(id, btn) {
+  document.querySelectorAll('.product-tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.product-tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+
+function renderProduct(p) {
+  _product = p;
+  const primaryImg  = p.images?.find(i => i.isPrimary)?.url || p.images?.[0]?.url || 'https://placehold.co/600x600/f5f5f5/999?text=Product';
+  const images      = p.images?.length ? p.images : [{ url: primaryImg }];
+  const outOfStock  = p.stockQuantity <= 0;
+  const lowStock    = !outOfStock && p.stockQuantity <= (p.reorderLevel || 10);
+  const hasDiscount = p.comparePrice && p.comparePrice > p.price;
+  const inWishlist  = Wishlist.has(p._id);
+  const savings     = hasDiscount ? p.comparePrice - p.price : 0;
+  const savePct     = hasDiscount ? Math.round((savings / p.comparePrice) * 100) : 0;
+
+  // Breadcrumb
+  if (p.category) {
+    const catEl = document.getElementById('breadcrumbCat');
+    catEl.innerHTML = `<a href="shop.html?category=${encodeURIComponent(p.category)}"
+      style="color:var(--re-text-muted)">${p.category}</a> <span>›</span>`;
+    catEl.style.display = 'contents';
+  }
+  document.getElementById('breadcrumbName').textContent = p.name;
+
+  // Page title + meta
+  document.title = `${p.name} | ${RebelEngine.config.storeName}`;
+  const desc = document.querySelector('meta[name="description"]');
+  if (desc) desc.content = p.shortDescription || p.description?.substring(0, 155) || p.name;
+
+  document.getElementById('productContent').innerHTML = `
+    <div class="product-layout">
+
+      <!-- GALLERY -->
+      <div>
+        <div class="product-gallery__main">
+          <img id="mainImage" src="${primaryImg}" alt="${p.name}" loading="eager">
+        </div>
+        ${images.length > 1 ? `
+          <div class="product-gallery__thumbs">
+            ${images.map((img, i) => `
+              <div class="product-gallery__thumb ${i === 0 ? 'active' : ''}"
+                onclick="switchThumb('${img.url}', ${i})">
+                <img src="${img.url}" alt="${img.alt || p.name} ${i + 1}" loading="lazy">
+              </div>`).join('')}
+          </div>` : ''}
+      </div>
+
+      <!-- INFO -->
+      <div class="product-info">
+        ${p.category ? `<div class="product-category">${p.category}</div>` : ''}
+        <h1 class="product-name">${p.name}</h1>
+
+        ${p.rating ? `
+          <div class="product-rating">
+            <span class="product-stars">${'★'.repeat(Math.round(p.rating))}${'☆'.repeat(5 - Math.round(p.rating))}</span>
+            <span class="product-rating-count">${p.rating.toFixed(1)} (${p.reviews || 0} reviews)</span>
+          </div>` : ''}
+
+        <div class="product-pricing">
+          <span class="product-price">${Currency.format(p.price)}</span>
+          ${hasDiscount ? `<span class="product-old-price">${Currency.format(p.comparePrice)}</span>` : ''}
+          ${hasDiscount ? `<span class="product-save">Save ${savePct}%</span>` : ''}
+        </div>
+
+        <div class="product-stock product-stock--${outOfStock ? 'out' : lowStock ? 'low' : 'in'}">
+          ${outOfStock ? 'Out of Stock' : lowStock ? `Only ${p.stockQuantity} left` : 'In Stock'}
+        </div>
+
+        ${p.shortDescription ? `<p class="product-short-desc">${p.shortDescription}</p>` : ''}
+
+        ${!outOfStock ? `
+          <!-- QTY -->
+          <div class="product-qty" style="margin-bottom:20px">
+            <button class="product-qty__btn" id="qtyDec"
+              onclick="setQty(_qty - 1)" disabled>−</button>
+            <input class="product-qty__num" id="qtyInput" type="number"
+              value="1" min="1" max="${p.stockQuantity}"
+              onchange="setQty(parseInt(this.value)||1)">
+            <button class="product-qty__btn" id="qtyInc"
+              onclick="setQty(_qty + 1)"
+              ${p.stockQuantity <= 1 ? 'disabled' : ''}>+</button>
+          </div>` : ''}
+
+        <!-- ACTIONS -->
+        <div class="product-actions">
+          <button class="re-btn re-btn--primary re-btn--lg"
+            style="flex:1"
+            id="addToCartBtn"
+            ${outOfStock ? 'disabled' : ''}
+            onclick="addToCart()">
+            ${outOfStock ? 'Out of Stock' : 'Add to Cart'}
+          </button>
+          <button class="product-wishlist-btn ${inWishlist ? 'active' : ''}"
+            id="wishlistBtn"
+            onclick="toggleWishlist()"
+            aria-label="${inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}">
+            ${inWishlist ? '♥' : '♡'}
+          </button>
+        </div>
+
+        <!-- BUY NOW -->
+        ${!outOfStock ? `
+          <button class="re-btn re-btn--outline re-btn--full" onclick="buyNow()"
+            style="margin-bottom:20px">
+            Buy Now
+          </button>` : ''}
+
+        <!-- META -->
+        <div class="product-meta">
+          ${p.sku ? `<div><strong>SKU:</strong> ${p.sku}</div>` : ''}
+          ${p.category ? `<div><strong>Category:</strong> <a href="shop.html?category=${encodeURIComponent(p.category)}" style="color:var(--re-accent)">${p.category}</a></div>` : ''}
+          ${p.tags?.length ? `<div><strong>Tags:</strong> ${p.tags.join(', ')}</div>` : ''}
+        </div>
+
+        <!-- DELIVERY NOTE -->
+        <div style="margin-top:20px;padding:14px;background:var(--re-bg-alt);border-radius:var(--re-radius);font-size:.82rem;color:var(--re-text-muted);display:flex;gap:10px;align-items:flex-start">
+          <span style="font-size:1.1rem">🚚</span>
+          <span id="deliveryNote">Fast delivery across South Africa.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="product-tabs">
+      <div class="product-tab-nav">
+        <button class="product-tab-btn active" onclick="switchTab('tabDesc', this)">Description</button>
+        ${p.details?.size || p.details?.materials?.length || p.details?.colors?.length
+          ? `<button class="product-tab-btn" onclick="switchTab('tabDetails', this)">Details</button>` : ''}
+        ${p.reviews > 0
+          ? `<button class="product-tab-btn" onclick="switchTab('tabReviews', this)">Reviews (${p.reviews})</button>` : ''}
+      </div>
+
+      <div id="tabDesc" class="product-tab-content active">
+        <div class="product-description">
+          ${p.description ? p.description.split('\n').map(l => `<p>${l}</p>`).join('') : '<p>No description available.</p>'}
+        </div>
+      </div>
+
+      <div id="tabDetails" class="product-tab-content">
+        <div style="font-size:.9rem;line-height:2;color:var(--re-text-muted)">
+          ${p.details?.size ? `<div><strong style="color:var(--re-text)">Size:</strong> ${p.details.size}</div>` : ''}
+          ${p.details?.materials?.length ? `<div><strong style="color:var(--re-text)">Materials:</strong> ${p.details.materials.join(', ')}</div>` : ''}
+          ${p.details?.colors?.length ? `<div><strong style="color:var(--re-text)">Colours:</strong> ${p.details.colors.join(', ')}</div>` : ''}
+        </div>
+      </div>
+
+      <div id="tabReviews" class="product-tab-content">
+        <p style="color:var(--re-text-muted);font-size:.9rem">Reviews coming soon.</p>
+      </div>
+    </div>
+
+    <!-- RELATED PRODUCTS -->
+    <div class="related-section">
+      <div class="re-section-header re-section-header--between">
+        <h2 class="re-section-title">You Might Also Like</h2>
+        <a href="shop.html${p.category ? '?category=' + encodeURIComponent(p.category) : ''}"
+          class="re-btn re-btn--outline">View All</a>
+      </div>
+      <div id="relatedGrid" class="re-grid re-grid--4">
+        <div class="re-skeleton" style="height:300px;border-radius:16px"></div>
+        <div class="re-skeleton" style="height:300px;border-radius:16px"></div>
+        <div class="re-skeleton" style="height:300px;border-radius:16px"></div>
+        <div class="re-skeleton" style="height:300px;border-radius:16px"></div>
+      </div>
+    </div>
+  `;
+}
+
+function addToCart() {
+  if (!_product) return;
+  Cart.add(_product, _qty);
+  Toast.show(`${_product.name} added to cart`);
+  CartDrawer.open();
+}
+
+function buyNow() {
+  if (!_product) return;
+  Cart.add(_product, _qty);
+  window.location.href = 'checkout.html';
+}
+
+function toggleWishlist() {
+  if (!_product) return;
+  const added = Wishlist.toggle(_product._id);
+  const btn   = document.getElementById('wishlistBtn');
+  if (btn) {
+    btn.textContent = added ? '♥' : '♡';
+    btn.classList.toggle('active', added);
+  }
+  Toast.show(added ? 'Added to wishlist' : 'Removed from wishlist');
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  const config = await RebelEngine.init(window.STORE_CONFIG);
+
+  // Delivery note from config
+  const delivery = config.delivery || {};
+  if (delivery.freeOver || delivery.flatRate) {
+    const note = delivery.freeOver
+      ? `Free delivery on orders over ${Currency.format(delivery.freeOver)}. ${delivery.areas || ''}`
+      : `Flat rate delivery: ${Currency.format(delivery.flatRate)}. ${delivery.areas || ''}`;
+    const noteEl = document.getElementById('deliveryNote');
+    if (noteEl) noteEl.textContent = note.trim();
+  }
+
+  // Load product by ID from URL
+  const id = Helpers.param('id');
+  if (!id) {
+    window.location.href = 'shop.html';
+    return;
+  }
+
+  try {
+    const res  = await fetch(
+      `${RebelEngine.apiBase}/products/${id}`,
+      { headers: { 'x-client-id': RebelEngine.clientId } }
+    );
+    const json = await res.json();
+    if (!json.success || !json.data) throw new Error('Not found');
+
+    renderProduct(json.data);
+
+    // Load related products (same category, excluding this one)
+    if (json.data.category) {
+      const related = await Products.getAll({
+        category: json.data.category,
+        limit:    5,
+        status:   'active',
+      });
+      const filtered = related.filter(p => p._id !== id).slice(0, 4);
+      Products.render(document.getElementById('relatedGrid'), filtered);
+    }
+
+  } catch (err) {
+    document.getElementById('productContent').innerHTML = `
+      <div class="re-empty">
+        <span class="re-empty__icon">🔍</span>
+        <p>Product not found.</p>
+        <a href="shop.html" class="re-btn re-btn--primary">Back to Shop</a>
+      </div>`;
+  }
+
+  document.getElementById('footerYear').textContent = new Date().getFullYear();
+});
+</script>
+</body>
+</html>
