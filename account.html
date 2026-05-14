@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Account</title>
+  <link id="re-font-link" rel="stylesheet" href="">
+  <link rel="stylesheet" href="rebel-base.css">
+  <link id="re-favicon" rel="icon" href="">
+  <style>
+    .account-layout {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 40px;
+      align-items: start;
+    }
+    .account-nav {
+      background: var(--re-surface);
+      border: 1px solid var(--re-border);
+      border-radius: var(--re-radius-lg);
+      overflow: hidden;
+      position: sticky;
+      top: calc(var(--re-nav-height) + 24px);
+    }
+    .account-nav__item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 20px;
+      font-weight: 600;
+      font-size: 0.88rem;
+      color: var(--re-text-muted);
+      border-bottom: 1px solid var(--re-border);
+      transition: all var(--re-transition);
+      cursor: pointer;
+      width: 100%;
+      text-align: left;
+      background: none;
+      border-left: none;
+      border-right: none;
+      border-top: none;
+    }
+    .account-nav__item:last-child { border-bottom: none; }
+    .account-nav__item:hover { color: var(--re-text); background: var(--re-bg-alt); }
+    .account-nav__item.active { color: var(--re-accent); background: var(--re-bg-alt); font-weight: 700; }
+    .account-nav__icon { font-size: 1rem; width: 20px; text-align: center; }
+
+    .account-panel { display: none; }
+    .account-panel.active { display: block; }
+
+    .account-card {
+      background: var(--re-surface);
+      border: 1px solid var(--re-border);
+      border-radius: var(--re-radius-lg);
+      padding: 32px;
+      margin-bottom: 20px;
+    }
+    .account-card__title {
+      font-family: var(--re-font-display);
+      font-weight: 800;
+      font-size: 1.1rem;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid var(--re-border);
+    }
+    /* Auth forms */
+    .auth-wrapper {
+      max-width: 480px;
+      margin: 0 auto;
+    }
+    .auth-tabs {
+      display: flex;
+      border-bottom: 2px solid var(--re-border);
+      margin-bottom: 32px;
+    }
+    .auth-tab {
+      padding: 12px 24px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--re-text-muted);
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      cursor: pointer;
+      background: none;
+      border-top: none;
+      border-left: none;
+      border-right: none;
+      transition: all var(--re-transition);
+    }
+    .auth-tab.active { color: var(--re-accent); border-bottom-color: var(--re-accent); }
+    .auth-form { display: none; }
+    .auth-form.active { display: block; }
+    /* Order list */
+    .order-card {
+      background: var(--re-surface);
+      border: 1px solid var(--re-border);
+      border-radius: var(--re-radius-lg);
+      padding: 24px;
+      margin-bottom: 16px;
+      transition: box-shadow var(--re-transition);
+    }
+    .order-card:hover { box-shadow: var(--re-shadow); }
+    .order-card__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .order-card__number { font-weight: 800; font-size: 1rem; }
+    .order-card__date { font-size: 0.82rem; color: var(--re-text-muted); }
+    .order-status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 12px;
+      border-radius: var(--re-radius-full);
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .order-status-badge--pending    { background: #fef3c7; color: #92400e; }
+    .order-status-badge--paid       { background: #d1fae5; color: #065f46; }
+    .order-status-badge--processing { background: #dbeafe; color: #1e40af; }
+    .order-status-badge--shipped    { background: #ede9fe; color: #5b21b6; }
+    .order-status-badge--delivered  { background: #d1fae5; color: #065f46; }
+    .order-status-badge--cancelled  { background: #fee2e2; color: #991b1b; }
+    .order-card__items {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+    .order-thumb {
+      width: 52px; height: 52px;
+      border-radius: var(--re-radius);
+      object-fit: cover;
+      background: var(--re-bg-alt);
+      border: 1px solid var(--re-border);
+    }
+    .order-card__footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 14px;
+      border-top: 1px solid var(--re-border);
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .order-card__total { font-weight: 800; font-size: 1rem; }
+    /* Profile form */
+    .profile-avatar {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      background: var(--re-accent);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem;
+      font-weight: 900;
+      color: #fff;
+      margin-bottom: 20px;
+      font-family: var(--re-font-display);
+    }
+    @media (max-width: 768px) {
+      .account-layout { grid-template-columns: 1fr; }
+      .account-nav { position: static; display: flex; overflow-x: auto; }
+      .account-nav__item { border-bottom: none; border-right: 1px solid var(--re-border); white-space: nowrap; flex-shrink: 0; }
+      .account-nav__item:last-child { border-right: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div data-section="announcement" style="display:none">
+  <span data-announcement-text></span>
+  <button class="re-announcement__close" onclick="this.parentElement.style.display='none'">✕</button>
+</div>
+
+<nav data-nav>
+  <div class="re-container">
+    <div class="re-nav__inner">
+      <a href="index.html" class="re-nav__logo">
+        <img data-store-logo style="display:none" alt="">
+        <span data-store-logo-text></span>
+      </a>
+      <ul class="re-nav__links" data-nav-links></ul>
+      <div class="re-nav__actions">
+        <div class="re-nav__icon" data-wishlist-icon title="Wishlist">
+          ♡<span data-wishlist-count style="display:none">0</span>
+        </div>
+        <div class="re-nav__icon" data-cart-icon title="Cart">
+          🛒<span data-cart-count style="display:none">0</span>
+        </div>
+        <div data-hamburger><span></span><span></span><span></span></div>
+      </div>
+    </div>
+  </div>
+</nav>
+<div data-mobile-nav aria-hidden="true"><nav data-mobile-nav-links></nav></div>
+<div class="re-nav-spacer"></div>
+
+<!-- CART DRAWER -->
+<div class="re-cart-overlay" id="cartOverlay"></div>
+<div class="re-cart-drawer" id="cartDrawer">
+  <div class="re-cart-drawer__header">
+    <span class="re-cart-drawer__title">Your Cart (<span data-cart-count>0</span>)</span>
+    <button class="re-cart-drawer__close" onclick="CartDrawer.close()">✕</button>
+  </div>
+  <div class="re-cart-drawer__items" id="cartItems"></div>
+  <div class="re-cart-drawer__footer">
+    <div class="re-cart-drawer__subtotal">
+      <span>Subtotal</span><span id="cartSubtotal">R 0.00</span>
+    </div>
+    <a href="checkout.html" class="re-btn re-btn--primary re-btn--full re-btn--lg">Checkout</a>
+  </div>
+</div>
+
+<section class="re-section">
+  <div class="re-container">
+
+    <!-- AUTH WALL — shown when not logged in -->
+    <div id="authWall" class="auth-wrapper">
+      <div style="text-align:center;margin-bottom:40px">
+        <h1 class="re-section-title">My Account</h1>
+        <p style="color:var(--re-text-muted);margin-top:8px">Sign in to view your orders and manage your account.</p>
+      </div>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="switchAuth('login', this)">Sign In</button>
+        <button class="auth-tab" onclick="switchAuth('register', this)">Create Account</button>
+      </div>
+
+      <!-- LOGIN -->
+      <div class="auth-form active" id="loginForm">
+        <div id="loginError" style="display:none;background:#fee2e2;color:#991b1b;padding:12px 16px;border-radius:var(--re-radius);font-size:.875rem;margin-bottom:20px;font-weight:600"></div>
+        <div class="re-form-group">
+          <label>Email Address</label>
+          <input type="email" id="loginEmail" placeholder="you@email.co.za" autocomplete="email">
+        </div>
+        <div class="re-form-group">
+          <label>Password</label>
+          <input type="password" id="loginPassword" placeholder="Your password" autocomplete="current-password">
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:-8px;margin-bottom:20px">
+          <button onclick="showForgot()" style="font-size:.82rem;color:var(--re-accent);background:none;border:none;cursor:pointer">Forgot password?</button>
+        </div>
+        <button class="re-btn re-btn--primary re-btn--full re-btn--lg" id="loginBtn" onclick="doLogin()">Sign In</button>
+      </div>
+
+      <!-- REGISTER -->
+      <div class="auth-form" id="registerForm">
+        <div id="registerError" style="display:none;background:#fee2e2;color:#991b1b;padding:12px 16px;border-radius:var(--re-radius);font-size:.875rem;margin-bottom:20px;font-weight:600"></div>
+        <div class="re-form-group">
+          <label>Full Name</label>
+          <input type="text" id="regName" placeholder="Sipho Dlamini" autocomplete="name">
+        </div>
+        <div class="re-form-group">
+          <label>Email Address</label>
+          <input type="email" id="regEmail" placeholder="you@email.co.za" autocomplete="email">
+        </div>
+        <div class="re-form-group">
+          <label>Password</label>
+          <input type="password" id="regPassword" placeholder="Min 8 characters" autocomplete="new-password">
+        </div>
+        <button class="re-btn re-btn--primary re-btn--full re-btn--lg" id="registerBtn" onclick="doRegister()">Create Account</button>
+      </div>
+
+      <!-- FORGOT PASSWORD -->
+      <div class="auth-form" id="forgotForm">
+        <div style="margin-bottom:20px">
+          <button onclick="switchAuth('login')" style="font-size:.82rem;color:var(--re-accent);background:none;border:none;cursor:pointer">← Back to Sign In</button>
+        </div>
+        <div id="forgotMsg" style="display:none;padding:12px 16px;border-radius:var(--re-radius);font-size:.875rem;margin-bottom:20px;font-weight:600"></div>
+        <div class="re-form-group">
+          <label>Email Address</label>
+          <input type="email" id="forgotEmail" placeholder="you@email.co.za">
+        </div>
+        <button class="re-btn re-btn--primary re-btn--full re-btn--lg" onclick="doForgot()">Send Reset Link</button>
+      </div>
+    </div>
+
+    <!-- ACCOUNT DASHBOARD — shown when logged in -->
+    <div id="accountDash" style="display:none">
+      <div class="account-layout">
+
+        <!-- Sidebar nav -->
+        <nav class="account-nav">
+          <button class="account-nav__item active" onclick="switchPanel('orders', this)">
+            <span class="account-nav__icon">📦</span> My Orders
+          </button>
+          <button class="account-nav__item" onclick="switchPanel('profile', this)">
+            <span class="account-nav__icon">👤</span> Profile
+          </button>
+          <button class="account-nav__item" onclick="switchPanel('addresses', this)">
+            <span class="account-nav__icon">📍</span> Addresses
+          </button>
+          <button class="account-nav__item" onclick="switchPanel('wishlist', this)">
+            <span class="account-nav__icon">♡</span> Wishlist
+          </button>
+          <button class="account-nav__item" onclick="doLogout()" style="color:#e63946">
+            <span class="account-nav__icon">↩</span> Sign Out
+          </button>
+        </nav>
+
+        <!-- Content panels -->
+        <div>
+
+          <!-- ORDERS -->
+          <div class="account-panel active" id="panelOrders">
+            <div class="account-card">
+              <div class="account-card__title">My Orders</div>
+              <div id="ordersList">
+                <div class="re-loading"><div class="re-spinner"></div><p>Loading orders…</p></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- PROFILE -->
+          <div class="account-panel" id="panelProfile">
+            <div class="account-card">
+              <div class="account-card__title">My Profile</div>
+              <div id="profileAvatar" class="profile-avatar">?</div>
+              <div id="profileInfo" style="margin-bottom:24px;font-size:.9rem;color:var(--re-text-muted);line-height:2"></div>
+              <div class="re-form-group">
+                <label>Full Name</label>
+                <input type="text" id="profileName" placeholder="Your name">
+              </div>
+              <div class="re-form-group">
+                <label>Email Address</label>
+                <input type="email" id="profileEmail" placeholder="your@email.co.za" disabled
+                  style="opacity:.6;cursor:not-allowed">
+              </div>
+              <div class="re-form-group">
+                <label>Phone Number</label>
+                <input type="tel" id="profilePhone" placeholder="+27 82 000 0000">
+              </div>
+              <button class="re-btn re-btn--primary" onclick="updateProfile()">Save Changes</button>
+            </div>
+          </div>
+
+          <!-- ADDRESSES -->
+          <div class="account-panel" id="panelAddresses">
+            <div class="account-card">
+              <div class="account-card__title">Saved Addresses</div>
+              <p style="color:var(--re-text-muted);font-size:.9rem">
+                Your shipping address from your last order will appear here automatically.
+              </p>
+              <div id="savedAddress" style="margin-top:20px"></div>
+            </div>
+          </div>
+
+          <!-- WISHLIST -->
+          <div class="account-panel" id="panelWishlist">
+            <div class="account-card">
+              <div class="account-card__title">My Wishlist</div>
+              <div id="wishlistItems"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<footer data-footer>
+  <div class="re-container">
+    <div class="re-footer__grid">
+      <div>
+        <a href="index.html" class="re-footer__logo"><span data-store-logo-text></span></a>
+        <p class="re-footer__tagline" data-store-tagline></p>
+        <div class="re-footer__social" id="footerSocial"></div>
+      </div>
+      <div>
+        <p class="re-footer__heading" data-footer-col1-heading></p>
+        <ul class="re-footer__links" data-footer-col1-links></ul>
+      </div>
+      <div>
+        <p class="re-footer__heading" data-footer-col2-heading></p>
+        <ul class="re-footer__links" data-footer-col2-links></ul>
+      </div>
+      <div>
+        <p class="re-footer__heading">Contact</p>
+        <ul class="re-footer__links">
+          <li data-store-address style="color:rgba(255,255,255,.6);font-size:.88rem;line-height:1.8"></li>
+          <li><a data-store-phone style="color:rgba(255,255,255,.6)"></a></li>
+          <li><a data-store-email style="color:rgba(255,255,255,.6)"></a></li>
+          <li id="footerHours" style="margin-top:10px;font-size:.82rem;color:rgba(255,255,255,.4);line-height:1.9"></li>
+        </ul>
+      </div>
+    </div>
+    <div class="re-footer__bottom">
+      <p>© <span id="footerYear"></span> <span data-store-name></span>. All rights reserved.</p>
+      <p>Powered by <strong style="color:var(--re-accent)">Rebel Engine</strong> 🇿🇦</p>
+    </div>
+  </div>
+</footer>
+
+<a data-whatsapp-float href="#" target="_blank" rel="noopener" style="display:none">💬</a>
+
+<script src="rebel-engine.js"></script>
+<script src="STORE_CONFIG.js"></script>
+<script>
+/* ─── AUTH HELPERS ─── */
+const Auth = {
+  _key: 're_token',
+  _userKey: 're_user',
+
+  getToken() { return localStorage.getItem(this._key); },
+  getUser()  {
+    try { return JSON.parse(localStorage.getItem(this._userKey)); }
+    catch { return null; }
+  },
+  setSession(token, user) {
+    localStorage.setItem(this._key, token);
+    localStorage.setItem(this._userKey, JSON.stringify(user));
+  },
+  clearSession() {
+    localStorage.removeItem(this._key);
+    localStorage.removeItem(this._userKey);
+  },
+  isLoggedIn() { return !!this.getToken(); },
+};
+
+/* ─── UI SWITCHING ─── */
+function switchAuth(tab, btn) {
+  document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+  document.querySelectorAll('.auth-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById(tab === 'login' ? 'loginForm' : tab === 'register' ? 'registerForm' : 'forgotForm').classList.add('active');
+  if (btn) btn.classList.add('active');
+}
+
+function switchPanel(panel, btn) {
+  document.querySelectorAll('.account-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.account-nav__item').forEach(b => b.classList.remove('active'));
+  document.getElementById(`panel${panel.charAt(0).toUpperCase() + panel.slice(1)}`).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (panel === 'wishlist') renderWishlist();
+}
+
+function showForgot() {
+  document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+  document.getElementById('forgotForm').classList.add('active');
+}
+
+/* ─── AUTH ACTIONS ─── */
+async function doLogin() {
+  const email    = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const errEl    = document.getElementById('loginError');
+  const btn      = document.getElementById('loginBtn');
+
+  if (!email || !password) { showErr(errEl, 'Please enter your email and password.'); return; }
+
+  btn.disabled = true; btn.textContent = 'Signing in…';
+  errEl.style.display = 'none';
+
+  try {
+    const res  = await fetch(`${RebelEngine.apiBase}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-client-id': RebelEngine.clientId },
+      body: JSON.stringify({ email, password }),
+    });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.message || 'Invalid credentials');
+
+    Auth.setSession(json.token, json.user || { name: json.data?.name, email });
+    showDashboard();
+  } catch (err) {
+    showErr(errEl, err.message);
+    btn.disabled = false; btn.textContent = 'Sign In';
+  }
+}
+
+async function doRegister() {
+  const name     = document.getElementById('regName').value.trim();
+  const email    = document.getElementById('regEmail').value.trim();
+  const password = document.getElementById('regPassword').value;
+  const errEl    = document.getElementById('registerError');
+  const btn      = document.getElementById('registerBtn');
+
+  if (!name || !email || !password) { showErr(errEl, 'Please fill in all fields.'); return; }
+  if (password.length < 8) { showErr(errEl, 'Password must be at least 8 characters.'); return; }
+
+  btn.disabled = true; btn.textContent = 'Creating account…';
+  errEl.style.display = 'none';
+
+  try {
+    const res  = await fetch(`${RebelEngine.apiBase}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-client-id': RebelEngine.clientId },
+      body: JSON.stringify({ name, email, password, role: 'customer' }),
+    });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.message || 'Registration failed');
+
+    Auth.setSession(json.token, { name, email });
+    showDashboard();
+  } catch (err) {
+    showErr(errEl, err.message);
+    btn.disabled = false; btn.textContent = 'Create Account';
+  }
+}
+
+async function doForgot() {
+  const email = document.getElementById('forgotEmail').value.trim();
+  const msgEl = document.getElementById('forgotMsg');
+  if (!email) { showMsg(msgEl, 'Please enter your email address.', 'error'); return; }
+
+  try {
+    await fetch(`${RebelEngine.apiBase}/auth/forgotpassword`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-client-id': RebelEngine.clientId },
+      body: JSON.stringify({ email }),
+    });
+    // Always show success (backend uses anti-enumeration — never reveals if email exists)
+    showMsg(msgEl, 'If an account exists with that email, a reset link has been sent.', 'success');
+  } catch {
+    showMsg(msgEl, 'Something went wrong. Please try again.', 'error');
+  }
+}
+
+function doLogout() {
+  Auth.clearSession();
+  document.getElementById('accountDash').style.display = 'none';
+  document.getElementById('authWall').style.display    = 'block';
+  switchAuth('login');
+}
+
+/* ─── DASHBOARD ─── */
+function showDashboard() {
+  const user = Auth.getUser();
+  document.getElementById('authWall').style.display    = 'none';
+  document.getElementById('accountDash').style.display = 'block';
+
+  // Profile
+  if (user) {
+    const initials = (user.name || '?').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    const avatarEl = document.getElementById('profileAvatar');
+    if (avatarEl) avatarEl.textContent = initials;
+    const nameEl  = document.getElementById('profileName');
+    const emailEl = document.getElementById('profileEmail');
+    const phoneEl = document.getElementById('profilePhone');
+    if (nameEl)  nameEl.value  = user.name  || '';
+    if (emailEl) emailEl.value = user.email || '';
+    if (phoneEl) phoneEl.value = user.phone || '';
+  }
+
+  loadOrders();
+}
+
+async function loadOrders() {
+  const list  = document.getElementById('ordersList');
+  const token = Auth.getToken();
+  if (!token) return;
+
+  try {
+    const res  = await fetch(`${RebelEngine.apiBase}/orders/my`, {
+      headers: {
+        'x-client-id':   RebelEngine.clientId,
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    const json = await res.json();
+    const orders = json.data || json.orders || [];
+
+    if (!orders.length) {
+      list.innerHTML = `
+        <div class="re-empty">
+          <span class="re-empty__icon">📦</span>
+          <p>You haven't placed any orders yet.</p>
+          <a href="shop.html" class="re-btn re-btn--primary">Start Shopping</a>
+        </div>`;
+      return;
+    }
+
+    list.innerHTML = orders.map(o => {
+      const status    = o.status || o.payment?.status || 'pending';
+      const itemThumbs = (o.items || []).slice(0, 4).map(i =>
+        `<img class="order-thumb" src="${i.image || 'https://placehold.co/52x52/f5f5f5/999?text=+'}" alt="${i.name || ''}">`
+      ).join('');
+      const extra = (o.items?.length || 0) > 4 ? `<span style="font-size:.78rem;color:var(--re-text-muted);align-self:center">+${o.items.length - 4} more</span>` : '';
+
+      return `
+        <div class="order-card">
+          <div class="order-card__header">
+            <div>
+              <div class="order-card__number">Order #${o.orderNumber || o._id?.slice(-6)}</div>
+              <div class="order-card__date">${Helpers.formatDate(o.createdAt)}</div>
+            </div>
+            <span class="order-status-badge order-status-badge--${status.toLowerCase()}">${status}</span>
+          </div>
+          <div class="order-card__items">${itemThumbs}${extra}</div>
+          <div class="order-card__footer">
+            <span class="order-card__total">${Currency.format(o.pricing?.total || o.total || 0)}</span>
+            <div style="display:flex;gap:8px">
+              <a href="order-status.html?order=${o.orderNumber || o._id}"
+                class="re-btn re-btn--outline re-btn--sm">Track Order</a>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+
+  } catch {
+    list.innerHTML = `<p style="color:var(--re-text-muted);font-size:.9rem">Could not load orders. Please try again.</p>`;
+  }
+}
+
+async function updateProfile() {
+  const token = Auth.getToken();
+  const name  = document.getElementById('profileName').value.trim();
+  const phone = document.getElementById('profilePhone').value.trim();
+  if (!token || !name) return;
+
+  try {
+    const res  = await fetch(`${RebelEngine.apiBase}/auth/updatedetails`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-client-id':   RebelEngine.clientId,
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ name, phone }),
+    });
+    const json = await res.json();
+    if (json.success) {
+      const user = Auth.getUser();
+      Auth.setSession(token, { ...user, name, phone });
+      Toast.show('Profile updated');
+    } else {
+      Toast.show(json.message || 'Update failed', 'error');
+    }
+  } catch {
+    Toast.show('Could not update profile', 'error');
+  }
+}
+
+async function renderWishlist() {
+  const container = document.getElementById('wishlistItems');
+  const ids = Wishlist.get();
+  if (!ids.length) {
+    container.innerHTML = `
+      <div class="re-empty">
+        <span class="re-empty__icon">♡</span>
+        <p>Your wishlist is empty.</p>
+        <a href="shop.html" class="re-btn re-btn--primary">Browse Products</a>
+      </div>`;
+    return;
+  }
+  container.innerHTML = `<div class="re-loading"><div class="re-spinner"></div></div>`;
+  // Fetch each wishlisted product
+  const fetches  = ids.map(id =>
+    fetch(`${RebelEngine.apiBase}/products/${id}`, { headers: { 'x-client-id': RebelEngine.clientId } })
+      .then(r => r.json()).then(j => j.data).catch(() => null)
+  );
+  const products = (await Promise.all(fetches)).filter(Boolean);
+  if (!products.length) { container.innerHTML = `<p style="color:var(--re-text-muted)">Could not load wishlist items.</p>`; return; }
+  container.innerHTML = `<div class="re-grid re-grid--auto-sm"></div>`;
+  Products.render(container.querySelector('.re-grid'), products);
+}
+
+/* ─── UTILS ─── */
+function showErr(el, msg) { el.textContent = msg; el.style.display = 'block'; }
+function showMsg(el, msg, type) {
+  el.textContent = msg;
+  el.style.background = type === 'error' ? '#fee2e2' : '#d1fae5';
+  el.style.color      = type === 'error' ? '#991b1b' : '#065f46';
+  el.style.display    = 'block';
+}
+
+/* ─── INIT ─── */
+document.addEventListener('DOMContentLoaded', async () => {
+  await RebelEngine.init(window.STORE_CONFIG);
+
+  if (Auth.isLoggedIn()) {
+    showDashboard();
+  }
+
+  // If redirected here after checkout
+  const redirect = Helpers.param('redirect');
+  if (redirect) {
+    sessionStorage.setItem('re_redirect', redirect);
+  }
+
+  document.getElementById('footerYear').textContent = new Date().getFullYear();
+});
+</script>
+</body>
+</html>
