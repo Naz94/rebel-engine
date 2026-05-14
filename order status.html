@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Track Order</title>
+  <link id="re-font-link" rel="stylesheet" href="">
+  <link rel="stylesheet" href="rebel-base.css">
+  <link id="re-favicon" rel="icon" href="">
+  <style>
+    .track-wrapper { max-width: 720px; margin: 0 auto; }
+    .track-search-card {
+      background: var(--re-surface);
+      border: 1px solid var(--re-border);
+      border-radius: var(--re-radius-lg);
+      padding: 40px;
+      margin-bottom: 32px;
+      text-align: center;
+    }
+    .track-search-card h1 {
+      font-family: var(--re-font-display);
+      font-size: clamp(1.6rem, 3vw, 2.2rem);
+      font-weight: 900;
+      margin-bottom: 8px;
+    }
+    .track-search-card p {
+      color: var(--re-text-muted);
+      font-size: .95rem;
+      margin-bottom: 28px;
+    }
+    .track-search-row {
+      display: flex;
+      gap: 0;
+      border-radius: var(--re-radius);
+      overflow: hidden;
+      border: 2px solid var(--re-border);
+      max-width: 480px;
+      margin: 0 auto;
+      transition: border-color var(--re-transition);
+    }
+    .track-search-row:focus-within { border-color: var(--re-accent); }
+    .track-search-row input {
+      flex: 1;
+      padding: 14px 18px;
+      border: none;
+      font-size: .95rem;
+      color: var(--re-text);
+      background: var(--re-surface);
+      outline: none;
+    }
+    .track-search-row button {
+      padding: 14px 24px;
+      background: var(--re-accent);
+      color: #fff;
+      font-weight: 700;
+      font-size: .88rem;
+      border: none;
+      cursor: pointer;
+      transition: background var(--re-transition);
+      flex-shrink: 0;
+    }
+    .track-search-row button:hover { background: var(--re-accent-hover, #c1121f); }
+
+    /* Order result card */
+    .order-result {
+      background: var(--re-surface);
+      border: 1px solid var(--re-border);
+      border-radius: var(--re-radius-lg);
+      overflow: hidden;
+    }
+    .order-result__header {
+      padding: 28px 32px;
+      background: var(--re-primary);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .order-result__num {
+      font-family: var(--re-font-display);
+      font-size: 1.4rem;
+      font-weight: 900;
+    }
+    .order-result__date { font-size: .82rem; color: rgba(255,255,255,.6); margin-top: 4px; }
+
+    /* Status timeline */
+    .order-timeline {
+      padding: 32px;
+      border-bottom: 1px solid var(--re-border);
+    }
+    .order-timeline__title {
+      font-size: .72rem;
+      font-weight: 800;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--re-text-muted);
+      margin-bottom: 24px;
+    }
+    .timeline {
+      display: flex;
+      justify-content: space-between;
+      position: relative;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      top: 20px;
+      left: 0; right: 0;
+      height: 2px;
+      background: var(--re-border);
+      z-index: 0;
+    }
+    .timeline__progress {
+      position: absolute;
+      top: 20px;
+      left: 0;
+      height: 2px;
+      background: var(--re-accent);
+      z-index: 1;
+      transition: width .6s ease;
+    }
+    .timeline__step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      z-index: 2;
+      flex: 1;
+    }
+    .timeline__dot {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      border: 3px solid var(--re-border);
+      background: var(--re-surface);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+      transition: all .3s ease;
+      flex-shrink: 0;
+    }
+    .timeline__step.done .timeline__dot {
+      background: var(--re-accent);
+      border-color: var(--re-accent);
+      color: #fff;
+    }
+    .timeline__step.current .timeline__dot {
+      border-color: var(--re-accent);
+      box-shadow: 0 0 0 4px rgba(230, 57, 70, .15);
+    }
+    .timeline__label {
+      font-size: .72rem;
+      font-weight: 700;
+      text-align: center;
+      color: var(--re-text-muted);
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .timeline__step.done .timeline__label,
+    .timeline__step.current .timeline__label { color: var(--re-text); }
+
+    /* Order body */
+    .order-body {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+    }
+    .order-body__section {
+      padding: 28px 32px;
+      border-right: 1px solid var(--re-border);
+    }
+    .order-body__section:last-child { border-right: none; }
+    .order-body__section:nth-child(3),
+    .order-body__section:nth-child(4) {
+      border-top: 1px solid var(--re-border);
+    }
+    .order-section-title {
+      font-size: .72rem;
+      font-weight: 800;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--re-text-muted);
+      margin-bottom: 16px;
+    }
+    /* Items list */
+    .order-items { padding: 28px 32px; border-top: 1px solid var(--re-border); }
+    .order-line-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--re-border);
+    }
+    .order-line-item:last-child { border-bottom: none; }
+    .order-line-item img {
+      width: 52px; height: 52px;
+      border-radius: var(--re-radius);
+      object-fit: cover;
+      background: var(--re-bg-alt);
+      flex-shrink: 0;
+    }
+    .order-line-item__name { font-weight: 600; font-size: .88rem; flex: 1; }
+    .order-line-item__qty  { font-size: .78rem; color: var(--re-text-muted); }
+    .order-line-item__price { font-weight: 800; font-size: .9rem; white-space: nowrap; }
+    /* Totals */
+    .order-totals { padding: 24px 32px; border-top: 1px solid var(--re-border); background: var(--re-bg-alt); }
+    .order-total-row {
+      display: flex; justify-content: space-between;
+      padding: 8px 0; font-size: .9rem;
+      border-bottom: 1px solid var(--re-border);
+    }
+    .order-total-row:last-child { border-bottom: none; font-weight: 800; font-size: 1.05rem; }
+    /* EFT panel */
+    .eft-panel {
+      padding: 24px 32px;
+      border-top: 1px solid var(--re-border);
+      background: #fef3c7;
+    }
+
+    @media (max-width: 600px) {
+      .order-result__header { flex-direction: column; gap: 12px; }
+      .order-body { grid-template-columns: 1fr; }
+      .order-body__section { border-right: none; border-top: 1px solid var(--re-border); }
+      .order-body__section:first-child { border-top: none; }
+      .track-search-card { padding: 28px 20px; }
+      .order-timeline { padding: 24px 20px; }
+      .order-items, .order-totals, .eft-panel, .order-body__section { padding: 20px; }
+      .timeline__label { font-size: .65rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div data-section="announcement" style="display:none">
+  <span data-announcement-text></span>
+  <button class="re-announcement__close" onclick="this.parentElement.style.display='none'">✕</button>
+</div>
+
+<nav data-nav>
+  <div class="re-container">
+    <div class="re-nav__inner">
+      <a href="index.html" class="re-nav__logo">
+        <img data-store-logo style="display:none" alt="">
+        <span data-store-logo-text></span>
+      </a>
+      <ul class="re-nav__links" data-nav-links></ul>
+      <div class="re-nav__actions">
+        <div class="re-nav__icon" data-cart-icon title="Cart">
+          🛒<span data-cart-count style="display:none">0</span>
+        </div>
+        <div data-hamburger><span></span><span></span><span></span></div>
+      </div>
+    </div>
+  </div>
+</nav>
+<div data-mobile-nav aria-hidden="true"><nav data-mobile-nav-links></nav></div>
+<div class="re-nav-spacer"></div>
+
+<!-- CART DRAWER -->
+<div class="re-cart-overlay" id="cartOverlay"></div>
+<div class="re-cart-drawer" id="cartDrawer">
+  <div class="re-cart-drawer__header">
+    <span class="re-cart-drawer__title">Your Cart (<span data-cart-count>0</span>)</span>
+    <button class="re-cart-drawer__close" onclick="CartDrawer.close()">✕</button>
+  </div>
+  <div class="re-cart-drawer__items" id="cartItems"></div>
+  <div class="re-cart-drawer__footer">
+    <div class="re-cart-drawer__subtotal">
+      <span>Subtotal</span><span id="cartSubtotal">R 0.00</span>
+    </div>
+    <a href="checkout.html" class="re-btn re-btn--primary re-btn--full re-btn--lg">Checkout</a>
+  </div>
+</div>
+
+<section class="re-section">
+  <div class="re-container">
+    <div class="track-wrapper">
+
+      <!-- SEARCH -->
+      <div class="track-search-card">
+        <h1>Track Your Order</h1>
+        <p>Enter your order number to see the latest status.</p>
+        <div class="track-search-row">
+          <input type="text" id="orderInput" placeholder="e.g. RE-123456"
+            onkeydown="if(event.key==='Enter') trackOrder()">
+          <button onclick="trackOrder()">Track</button>
+        </div>
+        <div id="trackError" style="display:none;margin-top:16px;font-size:.875rem;color:#e63946;font-weight:600"></div>
+      </div>
+
+      <!-- RESULT — hidden until found -->
+      <div id="orderResult" style="display:none">
+        <div class="order-result">
+
+          <!-- Header -->
+          <div class="order-result__header">
+            <div>
+              <div class="order-result__num" id="resOrderNum"></div>
+              <div class="order-result__date" id="resOrderDate"></div>
+            </div>
+            <div id="resStatusBadge"></div>
+          </div>
+
+          <!-- Timeline -->
+          <div class="order-timeline">
+            <div class="order-timeline__title">Order Progress</div>
+            <div class="timeline" id="orderTimeline">
+              <div class="timeline__progress" id="timelineProgress" style="width:0%"></div>
+            </div>
+          </div>
+
+          <!-- Info grid -->
+          <div class="order-body">
+            <div class="order-body__section">
+              <div class="order-section-title">Customer</div>
+              <div id="resCustomer" style="font-size:.9rem;line-height:1.9;color:var(--re-text-muted)"></div>
+            </div>
+            <div class="order-body__section">
+              <div class="order-section-title">Shipping Address</div>
+              <div id="resAddress" style="font-size:.9rem;line-height:1.9;color:var(--re-text-muted)"></div>
+            </div>
+            <div class="order-body__section">
+              <div class="order-section-title">Payment Method</div>
+              <div id="resPayment" style="font-size:.9rem;color:var(--re-text-muted)"></div>
+            </div>
+            <div class="order-body__section">
+              <div class="order-section-title">Delivery</div>
+              <div id="resDelivery" style="font-size:.9rem;color:var(--re-text-muted)"></div>
+            </div>
+          </div>
+
+          <!-- Items -->
+          <div class="order-items">
+            <div class="order-section-title">Order Items</div>
+            <div id="resItems"></div>
+          </div>
+
+          <!-- Totals -->
+          <div class="order-totals" id="resTotals"></div>
+
+          <!-- EFT instructions if unpaid EFT -->
+          <div class="eft-panel" id="resEft" style="display:none">
+            <strong style="display:block;margin-bottom:8px;font-size:.9rem">⏳ Awaiting Payment</strong>
+            <p style="font-size:.82rem;color:var(--re-text-muted);line-height:1.7">
+              Your order is reserved. Please make your EFT payment using the details emailed to you.
+              Use your order number as the reference.
+            </p>
+          </div>
+
+        </div>
+
+        <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap">
+          <a href="shop.html" class="re-btn re-btn--outline">Continue Shopping</a>
+          <a id="whatsappHelp" href="#" target="_blank" rel="noopener" class="re-btn re-btn--ghost"
+            style="display:none">💬 WhatsApp Us</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<footer data-footer>
+  <div class="re-container">
+    <div class="re-footer__grid">
+      <div>
+        <a href="index.html" class="re-footer__logo"><span data-store-logo-text></span></a>
+        <p class="re-footer__tagline" data-store-tagline></p>
+        <div class="re-footer__social" id="footerSocial"></div>
+      </div>
+      <div>
+        <p class="re-footer__heading" data-footer-col1-heading></p>
+        <ul class="re-footer__links" data-footer-col1-links></ul>
+      </div>
+      <div>
+        <p class="re-footer__heading" data-footer-col2-heading></p>
+        <ul class="re-footer__links" data-footer-col2-links></ul>
+      </div>
+      <div>
+        <p class="re-footer__heading">Contact</p>
+        <ul class="re-footer__links">
+          <li data-store-address style="color:rgba(255,255,255,.6);font-size:.88rem;line-height:1.8"></li>
+          <li><a data-store-phone style="color:rgba(255,255,255,.6)"></a></li>
+          <li><a data-store-email style="color:rgba(255,255,255,.6)"></a></li>
+          <li id="footerHours" style="margin-top:10px;font-size:.82rem;color:rgba(255,255,255,.4);line-height:1.9"></li>
+        </ul>
+      </div>
+    </div>
+    <div class="re-footer__bottom">
+      <p>© <span id="footerYear"></span> <span data-store-name></span>. All rights reserved.</p>
+      <p>Powered by <strong style="color:var(--re-accent)">Rebel Engine</strong> 🇿🇦</p>
+    </div>
+  </div>
+</footer>
+
+<a data-whatsapp-float href="#" target="_blank" rel="noopener" style="display:none">💬</a>
+
+<script src="rebel-engine.js"></script>
+<script src="STORE_CONFIG.js"></script>
+<script>
+// Status → timeline steps mapping
+const STATUS_STEPS = {
+  pending:    { step: 0, label: 'Pending',    icon: '🕐' },
+  paid:       { step: 1, label: 'Paid',       icon: '✅' },
+  processing: { step: 2, label: 'Processing', icon: '⚙️' },
+  shipped:    { step: 3, label: 'Shipped',    icon: '🚚' },
+  delivered:  { step: 4, label: 'Delivered',  icon: '📦' },
+  cancelled:  { step: -1, label: 'Cancelled', icon: '✕' },
+};
+
+const TIMELINE_STEPS = ['pending', 'paid', 'processing', 'shipped', 'delivered'];
+
+function buildTimeline(status) {
+  const current = STATUS_STEPS[status]?.step ?? 0;
+  const steps   = TIMELINE_STEPS.map((s, i) => {
+    const isDone    = i < current;
+    const isCurrent = i === current;
+    return `
+      <div class="timeline__step ${isDone ? 'done' : ''} ${isCurrent ? 'current' : ''}">
+        <div class="timeline__dot">${isDone ? '✓' : STATUS_STEPS[s].icon}</div>
+        <div class="timeline__label">${STATUS_STEPS[s].label}</div>
+      </div>`;
+  }).join('');
+
+  // Progress bar width
+  const pct = current === 0 ? 0 : Math.round((current / (TIMELINE_STEPS.length - 1)) * 100);
+
+  document.getElementById('orderTimeline').innerHTML =
+    `<div class="timeline__progress" style="width:${pct}%"></div>${steps}`;
+}
+
+function statusBadgeHtml(status) {
+  const s = STATUS_STEPS[status] || { label: status, icon: '●' };
+  const colours = {
+    pending:    'background:#fef3c7;color:#92400e',
+    paid:       'background:#d1fae5;color:#065f46',
+    processing: 'background:#dbeafe;color:#1e40af',
+    shipped:    'background:#ede9fe;color:#5b21b6',
+    delivered:  'background:#d1fae5;color:#065f46',
+    cancelled:  'background:#fee2e2;color:#991b1b',
+  };
+  return `<span style="${colours[status] || ''};padding:6px 14px;border-radius:9999px;font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em">
+    ${s.icon} ${s.label}
+  </span>`;
+}
+
+async function trackOrder() {
+  const input = document.getElementById('orderInput').value.trim();
+  const errEl = document.getElementById('trackError');
+
+  if (!input) { errEl.textContent = 'Please enter an order number.'; errEl.style.display = 'block'; return; }
+  errEl.style.display = 'none';
+
+  try {
+    const res  = await fetch(
+      `${RebelEngine.apiBase}/orders/status/${encodeURIComponent(input)}`,
+      { headers: { 'x-client-id': RebelEngine.clientId } }
+    );
+    const json = await res.json();
+    if (!json.success || !json.data) throw new Error(json.message || 'Order not found');
+
+    renderOrderResult(json.data);
+  } catch (err) {
+    errEl.textContent = err.message || 'Order not found. Please check the order number and try again.';
+    errEl.style.display = 'block';
+    document.getElementById('orderResult').style.display = 'none';
+  }
+}
+
+function renderOrderResult(o) {
+  const status = o.status || o.payment?.status || 'pending';
+
+  // Header
+  document.getElementById('resOrderNum').textContent  = `Order #${o.orderNumber || o._id?.slice(-8)}`;
+  document.getElementById('resOrderDate').textContent = `Placed on ${Helpers.formatDate(o.createdAt)}`;
+  document.getElementById('resStatusBadge').innerHTML = statusBadgeHtml(status);
+
+  // Timeline
+  buildTimeline(status);
+
+  // Customer
+  const c = o.customer || {};
+  document.getElementById('resCustomer').innerHTML = [
+    c.name  ? `<strong>${c.name}</strong>` : '',
+    c.email || '',
+    c.phone || '',
+  ].filter(Boolean).join('<br>');
+
+  // Address
+  const a = o.shippingAddress || {};
+  document.getElementById('resAddress').innerHTML = [
+    a.streetAddress,
+    a.city,
+    a.province,
+    a.postalCode,
+    a.country,
+  ].filter(Boolean).join('<br>');
+
+  // Payment
+  const payMethod = o.payment?.method || 'eft';
+  const payLabels = { eft: '🏦 EFT / Bank Transfer', card: '💳 Card (Yoco)', payfast: '💳 PayFast', ozow: '💳 Ozow', snapscan: '📱 SnapScan', zapper: '📱 Zapper' };
+  document.getElementById('resPayment').innerHTML = `
+    ${payLabels[payMethod] || payMethod}<br>
+    <span style="font-size:.78rem">${statusBadgeHtml(o.payment?.status || status)}</span>`;
+
+  // Delivery
+  const delivery = RebelEngine.config?.delivery || {};
+  document.getElementById('resDelivery').innerHTML = [
+    o.tracking?.courier ? `<strong>${o.tracking.courier}</strong>` : '',
+    o.tracking?.trackingNumber ? `Tracking: ${o.tracking.trackingNumber}` : '',
+    o.estimatedDelivery ? `Estimated: ${Helpers.formatDate(o.estimatedDelivery)}` : '',
+    !o.tracking?.trackingNumber ? (delivery.note || 'Delivery details will be emailed once shipped.') : '',
+  ].filter(Boolean).join('<br>');
+
+  // Items
+  const items = o.items || [];
+  document.getElementById('resItems').innerHTML = items.map(item => `
+    <div class="order-line-item">
+      <img src="${item.image || item.product?.images?.[0]?.url || 'https://placehold.co/52x52/f5f5f5/999?text=+'}"
+        alt="${item.name || ''}">
+      <div style="flex:1">
+        <div class="order-line-item__name">${item.name || item.product?.name || 'Product'}</div>
+        <div class="order-line-item__qty">Qty: ${item.quantity || item.qty || 1}</div>
+      </div>
+      <div class="order-line-item__price">
+        ${Currency.format((item.price || 0) * (item.quantity || item.qty || 1))}
+      </div>
+    </div>`).join('');
+
+  // Totals
+  const pricing = o.pricing || {};
+  document.getElementById('resTotals').innerHTML = `
+    <div class="order-total-row"><span>Subtotal</span><span>${Currency.format(pricing.subtotal || 0)}</span></div>
+    <div class="order-total-row"><span>Shipping</span><span>${pricing.shipping ? Currency.format(pricing.shipping) : 'TBC'}</span></div>
+    ${pricing.discount ? `<div class="order-total-row"><span>Discount</span><span style="color:#22c55e">−${Currency.format(pricing.discount)}</span></div>` : ''}
+    <div class="order-total-row"><span>Total</span><span>${Currency.format(pricing.total || 0)}</span></div>`;
+
+  // EFT notice
+  const eftPanel = document.getElementById('resEft');
+  eftPanel.style.display = (payMethod === 'eft' && status === 'pending') ? 'block' : 'none';
+
+  // WhatsApp help button
+  const wa = RebelEngine.config?.contact?.whatsapp;
+  const waBtn = document.getElementById('whatsappHelp');
+  if (wa) {
+    const msg = `Hi, I need help with order #${o.orderNumber || o._id?.slice(-8)}`;
+    waBtn.href = `https://wa.me/${wa.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`;
+    waBtn.style.display = 'inline-flex';
+  }
+
+  document.getElementById('orderResult').style.display = 'block';
+  document.getElementById('orderResult').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  await RebelEngine.init(window.STORE_CONFIG);
+
+  // Auto-track if order number in URL
+  const orderNum = Helpers.param('order');
+  if (orderNum) {
+    document.getElementById('orderInput').value = orderNum;
+    trackOrder();
+  }
+
+  document.getElementById('footerYear').textContent = new Date().getFullYear();
+});
+</script>
+</body>
+</html>
