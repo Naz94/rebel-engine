@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <title>Store</title>
+
+  <!-- Fonts injected by rebel-engine.js based on config -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link id="re-font-link" rel="stylesheet" href="">
+
+  <!-- Base styles — never edit this file -->
+  <link rel="stylesheet" href="rebel-base.css">
+
+  <!-- Favicon injected dynamically -->
+  <link id="re-favicon" rel="icon" href="">
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════
+     ANNOUNCEMENT BAR
+     Hidden by default. Shown when config.announcement is set.
+══════════════════════════════════════════════════ -->
+<div data-section="announcement" style="display:none">
+  <span data-announcement-text></span>
+  <a data-announcement-link style="display:none"></a>
+  <button class="re-announcement__close" onclick="this.parentElement.style.display='none'" aria-label="Close">✕</button>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     NAVIGATION
+══════════════════════════════════════════════════ -->
+<nav data-nav>
+  <div class="re-container">
+    <div class="re-nav__inner">
+
+      <!-- Logo -->
+      <a href="index.html" class="re-nav__logo">
+        <img data-store-logo style="display:none" alt="">
+        <span data-store-logo-text></span>
+      </a>
+
+      <!-- Desktop links — injected by engine from config.navLinks -->
+      <ul class="re-nav__links" data-nav-links></ul>
+
+      <!-- Actions -->
+      <div class="re-nav__actions">
+        <div class="re-search-wrapper">
+          <span class="re-search__icon">🔍</span>
+          <input
+            class="re-nav__search"
+            data-search-input
+            type="search"
+            placeholder="Search products..."
+            autocomplete="off"
+            aria-label="Search products">
+          <div class="re-search__results" data-search-results></div>
+        </div>
+
+        <div class="re-nav__icon" data-wishlist-icon title="Wishlist" role="button" tabindex="0" aria-label="Wishlist">
+          ♡<span data-wishlist-count style="display:none">0</span>
+        </div>
+
+        <div class="re-nav__icon" data-cart-icon title="Cart" role="button" tabindex="0" aria-label="Open cart">
+          🛒<span data-cart-count style="display:none">0</span>
+        </div>
+
+        <div data-hamburger aria-label="Open menu" role="button" tabindex="0">
+          <span></span><span></span><span></span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile nav — injected by engine -->
+<div data-mobile-nav aria-hidden="true">
+  <nav data-mobile-nav-links></nav>
+</div>
+
+<!-- Spacer pushes content below fixed nav -->
+<div class="re-nav-spacer"></div>
+
+<!-- ══════════════════════════════════════════════════
+     CART DRAWER
+══════════════════════════════════════════════════ -->
+<div class="re-cart-overlay" id="cartOverlay" onclick="CartDrawer.close()"></div>
+<div class="re-cart-drawer" id="cartDrawer" role="dialog" aria-label="Shopping cart">
+  <div class="re-cart-drawer__header">
+    <span class="re-cart-drawer__title">Your Cart (<span data-cart-count>0</span>)</span>
+    <button class="re-cart-drawer__close" onclick="CartDrawer.close()" aria-label="Close cart">✕</button>
+  </div>
+  <div class="re-cart-drawer__items" id="cartItems">
+    <div class="re-empty">
+      <span class="re-empty__icon">🛒</span>
+      Your cart is empty.
+    </div>
+  </div>
+  <div class="re-cart-drawer__footer">
+    <div class="re-cart-drawer__subtotal">
+      <span>Subtotal</span>
+      <span id="cartSubtotal">R 0.00</span>
+    </div>
+    <a href="checkout.html" class="re-btn re-btn--primary re-btn--full re-btn--lg">
+      Proceed to Checkout
+    </a>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     MAIN CONTENT — SECTIONS
+     Each section is shown/hidden via config.sections
+     Content is hydrated by rebel-engine.js
+══════════════════════════════════════════════════ -->
+<main id="re-main">
+
+  <!-- ── HERO ──────────────────────────────────────
+       Variants: slideshow | split | center | minimal
+       Controlled by config.hero.style
+  ─────────────────────────────────────────────── -->
+  <section data-section="hero" style="display:none">
+
+    <!-- Slideshow hero -->
+    <div data-hero-variant="slideshow" class="re-slideshow" style="display:none">
+      <div class="re-slideshow__track" id="heroSlideTrack"></div>
+      <button class="re-slideshow__prev" onclick="Slideshow.prev('heroSlideTrack')" aria-label="Previous slide">‹</button>
+      <button class="re-slideshow__next" onclick="Slideshow.next('heroSlideTrack')" aria-label="Next slide">›</button>
+      <div class="re-slideshow__dots" id="heroSlideDots"></div>
+    </div>
+
+    <!-- Split hero (image + text) -->
+    <div data-hero-variant="split" class="re-hero re-hero--split" style="display:none">
+      <div class="re-hero__content re-container">
+        <span class="re-hero__eyebrow" data-hero-eyebrow></span>
+        <h1 class="re-hero__title re-hero__title--inv" data-hero-title></h1>
+        <p class="re-hero__sub re-hero__sub--inv" data-hero-sub></p>
+        <div class="re-hero__cta">
+          <a class="re-btn re-btn--primary re-btn--lg" data-hero-cta-primary></a>
+          <a class="re-btn re-btn--inv re-btn--lg" data-hero-cta-secondary style="display:none"></a>
+        </div>
+      </div>
+      <div class="re-hero__media">
+        <img data-hero-image alt="" loading="eager">
+        <video data-hero-video autoplay muted loop playsinline style="display:none"></video>
+      </div>
+    </div>
+
+    <!-- Center hero (text over image) -->
+    <div data-hero-variant="center" class="re-hero re-hero--center" style="display:none">
+      <div class="re-hero__bg">
+        <img data-hero-image alt="" loading="eager">
+        <video data-hero-video autoplay muted loop playsinline style="display:none"></video>
+      </div>
+      <div class="re-hero__overlay"></div>
+      <div class="re-hero__content re-container" style="text-align:center">
+        <span class="re-hero__eyebrow" data-hero-eyebrow></span>
+        <h1 class="re-hero__title re-hero__title--inv" data-hero-title></h1>
+        <p class="re-hero__sub re-hero__sub--inv" data-hero-sub></p>
+        <div class="re-hero__cta" style="justify-content:center">
+          <a class="re-btn re-btn--primary re-btn--lg" data-hero-cta-primary></a>
+          <a class="re-btn re-btn--inv re-btn--lg" data-hero-cta-secondary style="display:none"></a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Minimal hero (no image, just text + bg colour) -->
+    <div data-hero-variant="minimal" class="re-hero re-hero--minimal" style="display:none">
+      <div class="re-container re-hero__content">
+        <span class="re-hero__eyebrow" data-hero-eyebrow></span>
+        <h1 class="re-hero__title" data-hero-title></h1>
+        <p class="re-hero__sub" data-hero-sub></p>
+        <div class="re-hero__cta">
+          <a class="re-btn re-btn--primary re-btn--lg" data-hero-cta-primary></a>
+          <a class="re-btn re-btn--outline re-btn--lg" data-hero-cta-secondary style="display:none"></a>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ── TICKER ─────────────────────────────────── -->
+  <div data-section="ticker" style="display:none">
+    <div class="re-ticker__track" id="tickerTrack"></div>
+  </div>
+
+  <!-- ── FEATURED PRODUCTS ──────────────────────── -->
+  <section data-section="featured-products" class="re-section" style="display:none">
+    <div class="re-container">
+      <div class="re-section-header re-section-header--between" data-animate>
+        <div>
+          <span class="re-section-eyebrow" data-featured-eyebrow></span>
+          <h2 class="re-section-title" data-featured-title></h2>
+          <p class="re-section-sub" data-featured-sub></p>
+        </div>
+        <a class="re-btn re-btn--outline" href="shop.html">View All</a>
+      </div>
+
+      <!-- Category filter pills -->
+      <div class="re-filter-pills" id="categoryPills" style="display:none"></div>
+
+      <!-- Product grid -->
+      <div id="featuredGrid" class="re-grid re-grid--4">
+        <!-- skeleton cards while loading -->
+        <div class="re-skeleton" style="height:340px;border-radius:16px"></div>
+        <div class="re-skeleton" style="height:340px;border-radius:16px"></div>
+        <div class="re-skeleton" style="height:340px;border-radius:16px"></div>
+        <div class="re-skeleton" style="height:340px;border-radius:16px"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── PROMO BANNER ───────────────────────────── -->
+  <section data-section="promo-banner" class="re-section--sm" style="display:none">
+    <div class="re-container">
+      <div class="re-banner">
+        <div class="re-banner__inner">
+          <div class="re-banner__content" data-animate>
+            <span class="re-section-eyebrow" data-banner-eyebrow></span>
+            <h2 class="re-section-title" data-banner-title></h2>
+            <p class="re-section-sub" data-banner-sub></p>
+            <div style="margin-top:28px">
+              <a class="re-btn re-btn--primary re-btn--lg" data-banner-cta></a>
+            </div>
+          </div>
+          <div class="re-banner__media">
+            <img data-banner-image alt="" loading="lazy">
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── IMAGE SLIDESHOW (standalone section) ──── -->
+  <section data-section="image-slideshow" class="re-section--sm" style="display:none">
+    <div class="re-container">
+      <div class="re-section-header re-section-header--center" data-animate>
+        <span class="re-section-eyebrow" data-slideshow-eyebrow></span>
+        <h2 class="re-section-title" data-slideshow-title></h2>
+      </div>
+    </div>
+    <div class="re-slideshow" id="standaloneSlideshow">
+      <div class="re-slideshow__track" id="standaloneTrack"></div>
+      <button class="re-slideshow__prev" onclick="Slideshow.prev('standaloneTrack')" aria-label="Previous">‹</button>
+      <button class="re-slideshow__next" onclick="Slideshow.next('standaloneTrack')" aria-label="Next">›</button>
+      <div class="re-slideshow__dots" id="standaloneDots"></div>
+    </div>
+  </section>
+
+  <!-- ── VIDEO SECTION ──────────────────────────── -->
+  <section data-section="video" class="re-section--sm" style="display:none">
+    <div class="re-container">
+      <div class="re-section-header re-section-header--center" data-animate>
+        <span class="re-section-eyebrow" data-video-eyebrow></span>
+        <h2 class="re-section-title" data-video-title></h2>
+        <p class="re-section-sub" data-video-sub style="margin:12px auto 0;max-width:520px"></p>
+      </div>
+      <div id="videoContainer" style="
+        position:relative;
+        border-radius:var(--re-radius-lg);
+        overflow:hidden;
+        background:var(--re-secondary);
+        margin-top:40px;
+        aspect-ratio:16/9;
+      ">
+        <!-- iframe embed or hosted video injected by engine -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ── IMAGE COLLAGE ──────────────────────────── -->
+  <section data-section="collage" class="re-section--sm" style="display:none">
+    <div class="re-container">
+      <div class="re-section-header re-section-header--between" data-animate>
+        <div>
+          <span class="re-section-eyebrow" data-collage-eyebrow></span>
+          <h2 class="re-section-title" data-collage-title></h2>
+        </div>
+        <a class="re-btn re-btn--outline" data-collage-link style="display:none"></a>
+      </div>
+      <!-- Layout class injected by engine: re-collage--3 | re-collage--5 | re-collage--mosaic | re-collage--circles -->
+      <div id="collageGrid" class="re-collage re-collage--mosaic"></div>
+    </div>
+  </section>
+
+  <!-- ── NEW ARRIVALS ───────────────────────────── -->
+  <section data-section="new-arrivals" class="re-section re-section--alt" style="display:none">
+    <div class="re-container">
+      <div class="re-section-header re-section-header--between" data-animate>
+        <div>
+          <span class="re-section-eyebrow" data-arrivals-eyebrow></span>
+          <h2 class="re-section-title" data-arrivals-title></h2>
+        </div>
+        <a class="re-btn re-btn--outline" href="shop.html?sort=newest">See All</a>
+      </div>
+      <div id="newArrivalsGrid" class="re-grid re-grid--auto"></div>
+    </div>
+  </section>
+
+  <!-- ── FULL WIDTH BANNER ──────────────────────── -->
+  <section data-section="full-banner" style="display:none">
+    <div class="re-banner re-banner--full">
+      <div class="re-banner__bg">
+        <img data-fullbanner-image alt="" loading="lazy">
+      </div>
+      <div class="re-banner__overlay"></div>
+      <div class="re-container" style="position:relative;z-index:2">
+        <div class="re-banner__content" data-animate style="color:#fff;padding:0">
+          <span class="re-section-eyebrow" style="color:var(--re-accent)" data-fullbanner-eyebrow></span>
+          <h2 class="re-section-title re-section-title--inv" data-fullbanner-title style="font-size:clamp(2rem,4vw,4rem)"></h2>
+          <p class="re-section-sub" style="color:rgba(255,255,255,0.75)" data-fullbanner-sub></p>
+          <div style="margin-top:28px">
+            <a class="re-btn re-btn--primary re-btn--lg" data-fullbanner-cta></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── LOGO CAROUSEL ──────────────────────────── -->
+  <div data-section="logo-carousel" style="display:none">
+    <div class="re-container" style="margin-bottom:20px">
+      <p class="re-label" style="text-align:center" data-logos-label></p>
+    </div>
+    <div class="re-logo-track" id="logoTrack"></div>
+  </div>
+
+  <!-- ── TESTIMONIALS ───────────────────────────── -->
+  <section data-section="testimonials" class="re-section re-section--alt" style="display:none">
+    <div class="re-container">
+      <div class="re-section-header re-section-header--center" data-animate>
+        <span class="re-section-eyebrow" data-testimonials-eyebrow></span>
+        <h2 class="re-section-title" data-testimonials-title></h2>
+        <p class="re-section-sub" data-testimonials-sub style="margin:12px auto 0"></p>
+      </div>
+      <div id="testimonialsGrid" class="re-grid re-grid--3"></div>
+    </div>
+  </section>
+
+  <!-- ── TRUST BADGES ───────────────────────────── -->
+  <div data-section="trust" style="display:none">
+    <div class="re-container">
+      <div class="re-trust__grid" id="trustGrid"></div>
+    </div>
+  </div>
+
+  <!-- ── SPECIALS / SALE ────────────────────────── -->
+  <section data-section="specials" class="re-section" style="display:none">
+    <div class="re-container">
+      <div class="re-section-header re-section-header--between" data-animate>
+        <div>
+          <span class="re-section-eyebrow" data-specials-eyebrow></span>
+          <h2 class="re-section-title" data-specials-title></h2>
+        </div>
+        <a class="re-btn re-btn--outline" href="shop.html?filter=sale">View All</a>
+      </div>
+      <div id="specialsGrid" class="re-grid re-grid--4"></div>
+    </div>
+  </section>
+
+  <!-- ── RICH TEXT / ABOUT BLOCK ────────────────── -->
+  <section data-section="rich-text" class="re-section re-section--alt" style="display:none">
+    <div class="re-container" style="max-width:800px">
+      <div data-animate>
+        <span class="re-section-eyebrow" data-richtext-eyebrow></span>
+        <h2 class="re-section-title" data-richtext-title style="margin-bottom:20px"></h2>
+        <div class="re-richtext-body" data-richtext-body style="font-size:1rem;line-height:1.8;color:var(--re-text-muted)"></div>
+        <div style="margin-top:28px">
+          <a class="re-btn re-btn--primary" data-richtext-cta style="display:none"></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── TWO COLUMN (image + text) ─────────────── -->
+  <section data-section="two-col" class="re-section" style="display:none">
+    <div class="re-container">
+      <!-- engine adds re-grid--2, swaps order based on config.twocol.imageLeft -->
+      <div id="twoColGrid" class="re-grid re-grid--2" style="align-items:center;gap:64px">
+        <div class="two-col__media" data-animate="scale">
+          <img data-twocol-image alt="" loading="lazy"
+            style="border-radius:var(--re-radius-lg);width:100%;aspect-ratio:4/5;object-fit:cover">
+        </div>
+        <div class="two-col__content" data-animate>
+          <span class="re-section-eyebrow" data-twocol-eyebrow></span>
+          <h2 class="re-section-title" data-twocol-title style="margin-bottom:16px"></h2>
+          <p style="font-size:1rem;line-height:1.8;color:var(--re-text-muted)" data-twocol-body></p>
+          <div style="margin-top:28px">
+            <a class="re-btn re-btn--primary" data-twocol-cta style="display:none"></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FAQ ────────────────────────────────────── -->
+  <section data-section="faq" class="re-section re-section--alt" style="display:none">
+    <div class="re-container" style="max-width:760px">
+      <div class="re-section-header re-section-header--center" data-animate>
+        <span class="re-section-eyebrow" data-faq-eyebrow></span>
+        <h2 class="re-section-title" data-faq-title></h2>
+      </div>
+      <div class="re-faq" id="faqList"></div>
+    </div>
+  </section>
+
+  <!-- ── NEWSLETTER ─────────────────────────────── -->
+  <section data-section="newsletter" style="display:none">
+    <div class="re-container">
+      <div data-animate style="text-align:center">
+        <span class="re-section-eyebrow" style="color:rgba(255,255,255,0.5)" data-newsletter-eyebrow></span>
+        <h2 class="re-newsletter__title" data-newsletter-title></h2>
+        <p class="re-newsletter__sub" data-newsletter-sub></p>
+        <form class="re-newsletter__form" onsubmit="handleNewsletter(event)">
+          <input
+            class="re-newsletter__input"
+            type="email"
+            placeholder="your@email.co.za"
+            required
+            aria-label="Email address">
+          <button type="submit" class="re-newsletter__btn" data-newsletter-btn>Subscribe</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ══════════════════════════════════════════════════
+     FOOTER
+══════════════════════════════════════════════════ -->
+<footer data-footer>
+  <div class="re-container">
+    <div class="re-footer__grid">
+
+      <!-- Brand column -->
+      <div>
+        <a href="index.html" class="re-footer__logo">
+          <img data-store-logo style="display:none" alt="">
+          <span data-store-logo-text></span>
+        </a>
+        <p class="re-footer__tagline" data-store-tagline></p>
+        <div class="re-footer__social" id="footerSocial"></div>
+      </div>
+
+      <!-- Nav columns — injected by engine from config.footer.columns -->
+      <div id="footerCol1">
+        <p class="re-footer__heading" data-footer-col1-heading></p>
+        <ul class="re-footer__links" data-footer-col1-links></ul>
+      </div>
+      <div id="footerCol2">
+        <p class="re-footer__heading" data-footer-col2-heading></p>
+        <ul class="re-footer__links" data-footer-col2-links></ul>
+      </div>
+      <div id="footerCol3">
+        <p class="re-footer__heading">Contact</p>
+        <ul class="re-footer__links">
+          <li data-store-address style="color:rgba(255,255,255,0.6);font-size:.88rem;line-height:1.7"></li>
+          <li><a data-store-phone style="color:rgba(255,255,255,0.6)"></a></li>
+          <li><a data-store-email style="color:rgba(255,255,255,0.6)"></a></li>
+          <li id="footerHours" style="margin-top:12px;font-size:.82rem;color:rgba(255,255,255,0.4);line-height:1.9"></li>
+        </ul>
+      </div>
+
+    </div>
+
+    <div class="re-footer__bottom">
+      <p>© <span id="footerYear"></span> <span data-store-name></span>. All rights reserved.</p>
+      <p>Powered by <strong style="color:var(--re-accent)">Rebel Engine</strong> 🇿🇦</p>
+    </div>
+  </div>
+</footer>
+
+<!-- WhatsApp float button -->
+<a data-whatsapp-float href="#" target="_blank" rel="noopener" aria-label="Chat on WhatsApp" style="display:none">💬</a>
+
+<!-- ══════════════════════════════════════════════════
+     SCRIPTS
+══════════════════════════════════════════════════ -->
+<script src="rebel-engine.js"></script>
+<script src="rebel-sections.js"></script>
+<script src="STORE_CONFIG.js"></script>
+
+<script>
+/* ─────────────────────────────────────────────────
+   PAGE BOOTSTRAP
+   Everything flows from RebelEngine.init()
+   STORE_CONFIG.js provides the tenant config.
+───────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', async () => {
+
+  // 1. Init engine — loads remote config, applies branding
+  const config = await RebelEngine.init(window.STORE_CONFIG);
+
+  // 2. Render all sections
+  await Sections.render(config);
+
+  // 3. Init animations
+  Animations.init();
+
+  // 4. Footer year
+  document.getElementById('footerYear').textContent = new Date().getFullYear();
+
+});
+
+/* ─────────────────────────────────────────────────
+   CART DRAWER
+───────────────────────────────────────────────── */
+const CartDrawer = {
+  open() {
+    document.getElementById('cartDrawer').classList.add('open');
+    document.getElementById('cartOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    this.render();
+  },
+  close() {
+    document.getElementById('cartDrawer').classList.remove('open');
+    document.getElementById('cartOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+  },
+  render() {
+    const items = Cart.get();
+    const container = document.getElementById('cartItems');
+    const subtotalEl = document.getElementById('cartSubtotal');
+
+    if (!items.length) {
+      container.innerHTML = `
+        <div class="re-empty">
+          <span class="re-empty__icon">🛒</span>
+          Your cart is empty.
+        </div>`;
+      subtotalEl.textContent = 'R 0.00';
+      return;
+    }
+
+    container.innerHTML = items.map(item => `
+      <div class="re-cart-item">
+        <img class="re-cart-item__img"
+          src="${item.image || 'https://placehold.co/64x64/f5f5f5/999?text=+'}"
+          alt="${item.name}">
+        <div class="re-cart-item__info">
+          <div class="re-cart-item__name">${item.name}</div>
+          <div class="re-cart-item__price">${Currency.format(item.price)}</div>
+          <div class="re-cart-item__qty">
+            <button class="re-cart-item__qty-btn"
+              onclick="Cart.setQty('${item.id}', ${item.qty - 1}); CartDrawer.render()">−</button>
+            <span class="re-cart-item__qty-num">${item.qty}</span>
+            <button class="re-cart-item__qty-btn"
+              onclick="Cart.setQty('${item.id}', ${item.qty + 1}); CartDrawer.render()">+</button>
+          </div>
+        </div>
+        <button class="re-cart-item__remove"
+          onclick="Cart.remove('${item.id}'); CartDrawer.render()"
+          aria-label="Remove item">✕</button>
+      </div>
+    `).join('');
+
+    subtotalEl.textContent = Currency.format(Cart.subtotal());
+  }
+};
+
+// Wire cart icon to drawer
+document.querySelectorAll('[data-cart-icon]').forEach(el => {
+  el.addEventListener('click', () => CartDrawer.open());
+});
+
+// Update drawer on cart change
+window.addEventListener('re:cartchange', () => {
+  if (document.getElementById('cartDrawer').classList.contains('open')) {
+    CartDrawer.render();
+  }
+});
+
+/* ─────────────────────────────────────────────────
+   NEWSLETTER
+───────────────────────────────────────────────── */
+async function handleNewsletter(e) {
+  e.preventDefault();
+  const email = e.target.querySelector('input[type="email"]').value;
+  const btn = e.target.querySelector('button');
+  btn.textContent = 'Subscribing...';
+  btn.disabled = true;
+
+  try {
+    // Post to backend — optional endpoint
+    await fetch(`${RebelEngine.apiBase}/newsletter/subscribe`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Client-ID': RebelEngine.clientId
+      },
+      body: JSON.stringify({ email })
+    });
+  } catch (err) {
+    // Fail silently — store doesn't need a newsletter endpoint to work
+  }
+
+  btn.textContent = '✓ Subscribed!';
+  e.target.querySelector('input').value = '';
+  setTimeout(() => {
+    btn.textContent = document.querySelector('[data-newsletter-btn]')?.getAttribute('data-original') || 'Subscribe';
+    btn.disabled = false;
+  }, 3000);
+}
+
+/* ─────────────────────────────────────────────────
+   INTERSECTION OBSERVER ANIMATIONS
+───────────────────────────────────────────────── */
+const Animations = {
+  init() {
+    if (!('IntersectionObserver' in window)) {
+      document.querySelectorAll('[data-animate]').forEach(el => el.classList.add('animated'));
+      return;
+    }
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('animated');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12 });
+
+    document.querySelectorAll('[data-animate]').forEach(el => observer.observe(el));
+  }
+};
+
+/* ─────────────────────────────────────────────────
+   SLIDESHOW ENGINE
+───────────────────────────────────────────────── */
+const Slideshow = {
+  _states: {},
+
+  init(trackId, slides, autoplayMs = 5000) {
+    const state = { index: 0, total: slides.length, timer: null };
+    this._states[trackId] = state;
+
+    const track = document.getElementById(trackId);
+    if (!track) return;
+
+    track.innerHTML = slides.map((slide, i) => `
+      <div class="re-slideshow__slide" style="min-height:${slide.height || '75vh'}">
+        ${slide.video
+          ? `<video autoplay muted loop playsinline style="width:100%;height:100%;object-fit:cover"><source src="${slide.video}"></video>`
+          : `<img src="${slide.image || ''}" alt="${slide.title || ''}" loading="${i === 0 ? 'eager' : 'lazy'}" style="width:100%;height:100%;object-fit:cover">`
+        }
+        <div class="re-slide__content ${slide.align === 'center' ? 're-slide__content--center' : ''}">
+          ${slide.eyebrow ? `<span class="re-slide__eyebrow">${slide.eyebrow}</span>` : ''}
+          ${slide.title   ? `<h2 class="re-slide__title">${slide.title}</h2>` : ''}
+          ${slide.sub     ? `<p class="re-slide__sub">${slide.sub}</p>` : ''}
+          ${slide.cta     ? `
+            <div class="re-slide__cta">
+              <a href="${slide.cta.href || '#'}" class="re-btn re-btn--primary re-btn--lg">${slide.cta.label}</a>
+              ${slide.cta2 ? `<a href="${slide.cta2.href || '#'}" class="re-btn re-btn--inv re-btn--lg">${slide.cta2.label}</a>` : ''}
+            </div>` : ''}
+        </div>
+      </div>
+    `).join('');
+
+    this._renderDots(trackId);
+    if (autoplayMs && slides.length > 1) {
+      state.timer = setInterval(() => this.next(trackId), autoplayMs);
+    }
+  },
+
+  _renderDots(trackId) {
+    const state = this._states[trackId];
+    if (!state) return;
+    const dotsId = trackId.replace('Track', 'Dots');
+    const dotsEl = document.getElementById(dotsId);
+    if (!dotsEl) return;
+    dotsEl.innerHTML = Array.from({ length: state.total }, (_, i) =>
+      `<button class="re-slideshow__dot ${i === 0 ? 'active' : ''}"
+        onclick="Slideshow.goto('${trackId}', ${i})" aria-label="Slide ${i + 1}"></button>`
+    ).join('');
+  },
+
+  goto(trackId, index) {
+    const state = this._states[trackId];
+    const track = document.getElementById(trackId);
+    if (!state || !track) return;
+    state.index = ((index % state.total) + state.total) % state.total;
+    track.style.transform = `translateX(-${state.index * 100}%)`;
+    const dotsId = trackId.replace('Track', 'Dots');
+    document.querySelectorAll(`#${dotsId} .re-slideshow__dot`).forEach((d, i) => {
+      d.classList.toggle('active', i === state.index);
+    });
+  },
+
+  next(trackId) {
+    const state = this._states[trackId];
+    if (!state) return;
+    this.goto(trackId, state.index + 1);
+  },
+
+  prev(trackId) {
+    const state = this._states[trackId];
+    if (!state) return;
+    this.goto(trackId, state.index - 1);
+  }
+};
+</script>
+
+</body>
+</html>
